@@ -1,0 +1,71 @@
+org: ralfxdev
+app: task-manager
+service: task-manager
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: dev
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/task_manager"
+
+resources:
+  Resources:
+    TasksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-tasks-${self:provider.stage}
+        AttributeDefinitions:
+          - AttributeName: task_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: task_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+functions:
+  get-all-tasks-http:
+    handler: handler.getHandlerGetAllTaskHttp
+    events:
+      - httpApi:
+          path: /tasks
+          method: get
+
+  get-task-by-id-http:
+    handler: handler.getHandlerGetTaskByIdHttp
+    events:
+      - httpApi:
+          path: /tasks/{id}
+          method: get
+
+  create-task-http:
+    handler: handler.getHandlerCreateTaskHttp
+    events:
+      - httpApi:
+          path: /tasks
+          method: post
+
+  update-task-http:
+    handler: handler.getHandlerUpdateTaskHttp
+    events:
+      - httpApi:
+          path: /tasks/{id}
+          method: put
+
+  delete-task-http:
+    handler: handler.getHandlerDeleteTaskHttp
+    events:
+      - httpApi:
+          path: /tasks/{id}
+          method: delete
